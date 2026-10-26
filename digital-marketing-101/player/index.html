@@ -117,6 +117,8 @@ details.tutor p{line-height:1.55;margin:8px 0 2px}
 const C = COURSE_DATA;
 const KEY = 'tessera-course-v2-' + C.title;
 let S = JSON.parse(localStorage.getItem(KEY) || '{"answers":{},"practical":{},"final":false,"name":"","review":{}}');
+if(S.v !== 3){ try{ localStorage.setItem('tessera-backup-' + C.title + '-v' + (S.v || 1), JSON.stringify(S)); }catch(e){} S = {"answers":{},"practical":{},"final":false,"name":"","review":{}}; }
+S.v = 3;
 S.review = S.review || {};
 S.pg = S.pg || {};
 S.items = S.items || {};
@@ -228,7 +230,7 @@ function wire(){
   document.querySelectorAll('[data-io]').forEach(el=>el.onclick=()=>{ if(el.classList.contains('right')||el.classList.contains('wrong'))return; const box=el.closest('.item'); box.querySelectorAll('.opt[data-grp="'+el.dataset.grp+'"]').forEach(o=>o.classList.remove('sel')); el.classList.add('sel'); });
   document.querySelectorAll('[data-line]').forEach(el=>el.onclick=()=>{ if(el.closest('.item').querySelector('.verdict'))return; el.classList.toggle('flagged'); });
   document.querySelectorAll('[data-ord]').forEach(el=>el.onclick=()=>{ const arr=ORD[el.dataset.ord]; const i=+el.dataset.i, j=i+ +el.dataset.d; if(!arr||j<0||j>=arr.length)return; const t=arr[i]; arr[i]=arr[j]; arr[j]=t; keepY=window.scrollY; render(); });
-  const answer=(id,isRet)=>{ const it=bankItem(id); const resp=readResp(it); if(resp===null)return; const score=scoreItem(it,resp);
+  const answer=(id,isRet)=>{ const it=bankItem(id); const resp=readResp(it); if(resp===null){ const box=document.getElementById('it-'+id); if(box){ let hint=box.querySelector('.verdict'); if(!hint){hint=document.createElement('div'); hint.className='verdict'; box.appendChild(hint);} hint.innerHTML='<span class="fail">Choose or enter an answer first</span> — then check it.'; box.scrollIntoView({block:'center',behavior:'smooth'}); } return; } const score=scoreItem(it,resp);
     if(isRet){ S.ret[id]={score:score, resp:resp}; }
     else { const rec=S.items[id]||{}; if(rec.first===undefined)rec.first=score; rec.score=score; rec.resp=resp; rec.tries=(rec.tries||0)+1; const gt=gateTag(); if(gt)rec.gate=gt; S.items[id]=rec; settleGates(); }
     save(); keepY=window.scrollY; render(); };
